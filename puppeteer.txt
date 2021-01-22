@@ -1,0 +1,42 @@
+const pup=require('puppeteer');
+
+const url="https://prefeitura.pbh.gov.br/saude/licitacao/pregao-eletronico-151-2020";
+
+function run () {
+    return new Promise(async(resolve,reject) => {
+        try {
+            const browser = await pup.launch({headless:false,args:['--start-maximized']});
+            const page = await browser.newPage();
+            await page.setDefaultNavigationTimeout(0);
+            await page.goto(url, {waitUntil: 'networkidle0'});
+
+            let data = await page.evaluate(() => {
+                let publicationDate=document.querySelector('.field-content .lbl-licitacao:nth-child(1)').childNodes[1].textContent;
+                let biddingDate=document.querySelector('.field-content .lbl-licitacao:nth-child(19)').childNodes[1].textContent;
+                let object=document.querySelector('.field-content>p:nth-child(6)').innerText;
+                
+                let links=[];
+                let linkObjectsList=document.querySelectorAll('.field-content>table .field--type-image>a');
+                linkObjectsList.forEach((linkObject) => {
+                    links.push(linkObject.getAttribute('href'));
+                });
+
+                return {
+                    "Publication Date":publicationDate,
+                    "Bidding Date":biddingDate,
+                    "Object":object,
+                    "Related links":links
+                };
+
+                return results;
+            })
+            
+            browser.close();
+            return resolve(data);
+
+        } catch(e) {
+            return reject(e);
+        }
+    })
+}
+run().then(console.log).catch(console.error);
